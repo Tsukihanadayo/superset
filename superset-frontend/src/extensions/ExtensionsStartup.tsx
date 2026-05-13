@@ -20,6 +20,7 @@ import { useEffect } from 'react';
 // eslint-disable-next-line no-restricted-syntax
 import * as supersetCore from '@apache-superset/core';
 import { FeatureFlag, isFeatureEnabled } from '@superset-ui/core';
+import { t } from '@apache-superset/core/translation';
 import {
   authentication,
   core,
@@ -30,8 +31,9 @@ import {
   sqlLab,
   views,
 } from 'src/core';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from 'src/views/store';
+import { addWarningToast } from 'src/components/MessageToasts/actions';
 import ExtensionsLoader from './ExtensionsLoader';
 
 declare global {
@@ -52,6 +54,7 @@ declare global {
 const ExtensionsStartup: React.FC<{ children?: React.ReactNode }> = ({
   children,
 }) => {
+  const dispatch = useDispatch();
   const userId = useSelector<RootState, number | undefined>(
     ({ user }) => user.userId,
   );
@@ -72,9 +75,28 @@ const ExtensionsStartup: React.FC<{ children?: React.ReactNode }> = ({
       views,
     };
 
+    // Load extensions without blocking the initial render (see #40915);
+    // surface any load failure as a warning toast instead of failing silently.
     if (isFeatureEnabled(FeatureFlag.EnableExtensions)) {
-      ExtensionsLoader.getInstance().initializeExtensions();
+      ExtensionsLoader.getInstance()
+        .initializeExtensions()
+        .then(() =>
+          supersetCore.utils.logging.info(
+            'Extensions initialized successfully.',
+          ),
+        )
+        .catch(error => {
+          supersetCore.utils.logging.error(
+            'Error setting up extensions:',
+            error,
+          );
+          dispatch(
+            addWarningToast(t('Extensions failed to load: %s', String(error))),
+          );
+        });
     }
+    // dispatch is stable; intentionally only re-run when the user changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   return <>{children}</>;
