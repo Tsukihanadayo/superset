@@ -17,6 +17,7 @@
  * under the License.
  */
 export enum VizType {
+  Demo = 'demo',
   Area = 'echarts_area',
   Bar = 'echarts_timeseries_bar',
   BigNumber = 'big_number',

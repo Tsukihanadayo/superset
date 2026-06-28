@@ -88,6 +88,7 @@ import { HandlebarsChartPlugin } from '@superset-ui/plugin-chart-handlebars';
 import { ChartCustomizationPlugins, FilterPlugins } from 'src/constants';
 import AgGridTableChartPlugin from '@superset-ui/plugin-chart-ag-grid-table';
 import TimeTableChartPlugin from '../TimeTable';
+import { SupersetPluginChartDemo } from 'plugins/superset-plugin-chart-demo/src';
 
 export default class MainPreset extends Preset {
   constructor() {
@@ -209,6 +210,7 @@ export default class MainPreset extends Preset {
             },
           ],
         }).configure({ key: VizType.Cartodiagram }),
+        new SupersetPluginChartDemo().configure({ key: VizType.Demo }),
         ...experimentalPlugins,
         ...agGridTablePlugin,
       ],
